@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/jpeg" href="photo2.jpg">
 <title>Приглашение на день рождения</title>
 <meta property="og:image" content="cover.jpeg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -67,6 +68,15 @@
     height: 100%;
     pointer-events: none;
     z-index: 1;
+  }
+
+  .balloons-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    cursor: pointer;
   }
 
   .hero .kicker {
@@ -276,15 +286,6 @@
     .final p { font-size: clamp(28px, 8vw, 38px); }
   }
 
-  /* ===== Фото-экран ===== */
-  .photo-screen {
-    position: relative;
-    min-height: 90vh;
-    background-image: url('photo2.jpg');
-    background-size: cover;
-    background-position: center;
-  }
-
   /* ===== Форма ===== */
   form .field { margin-bottom: 20px; }
 
@@ -492,10 +493,9 @@
 <section class="hero" id="top">
   <div class="tint"></div>
   <canvas id="fireworks" class="hero-canvas"></canvas>
-  <canvas id="balloons" class="hero-canvas"></canvas>
+  <canvas id="balloons" class="balloons-canvas"></canvas>
   <div class="inner">
     <div class="kicker">Приглашение на день рождения</div>
-    <h1>Нашему малышу<br>исполняется 3 года!</h1>
     <div class="sub">30 августа · 17:00</div>
   </div>
   <button class="arrow-down" onclick="scrollDown(this)" aria-label="Прокрутить вниз">
@@ -545,13 +545,6 @@
       </div>
     </div>
   </div>
-</section>
-
-<!-- Фото -->
-<section class="photo-screen">
-  <button class="arrow-down" onclick="scrollDown(this)" aria-label="Прокрутить вниз">
-    <svg viewBox="0 0 38.417 18.592"><path d="M19.208,18.592c-0.241,0-0.483-0.087-0.673-0.261L0.327,1.74c-0.408-0.372-0.438-1.004-0.066-1.413c0.372-0.409,1.004-0.439,1.413-0.066L19.208,16.24L36.743,0.261c0.411-0.372,1.042-0.342,1.413,0.066c0.372,0.408,0.343,1.041-0.065,1.413L19.881,18.332C19.691,18.505,19.449,18.592,19.208,18.592z"/></svg>
-  </button>
 </section>
 
 <!-- Анкета гостя -->
@@ -637,7 +630,7 @@
 <script>
   // Плавная прокрутка к следующему блоку
   function scrollDown(btn) {
-    var all = document.querySelectorAll('.section, .photo-screen, .final, footer');
+    var all = document.querySelectorAll('.section, .final, footer');
     for (var i = 0; i < all.length; i++) {
       if (all[i].getBoundingClientRect().top > 4) {
         all[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -656,8 +649,7 @@
   document.querySelectorAll('.reveal').forEach(function (el) { observer.observe(el); });
 
   // Отправка анкеты: данные копятся в localStorage,
-  // каждый ответ скачивается в отдельный файл guests.json,
-  // а если ниже указан GUEST_EMAIL — ответ также уходит на почту через formsubmit.co
+  // каждый ответ уходит на почту GUEST_EMAIL через formsubmit.co
   var GUEST_EMAIL = 'charliefantom@gmail.com'; // ответы гостей приходят сюда через formsubmit.co
 
   function saveGuest(data) {
@@ -668,35 +660,23 @@
     return all;
   }
 
-  function downloadGuests(all) {
-    var blob = new Blob([JSON.stringify(all, null, 2)], { type: 'application/json' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'guests.json';
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-
   function sendGuestEmail(data) {
+    var params = new URLSearchParams();
+    params.set('name', data.name);
+    params.set('phone', data.phone);
+    params.set('attend', data.attend);
+    params.set('message', 'Гость: ' + data.name + ' (' + data.phone + ') — ' + data.attend + '. Заполнено: ' + data.date);
+    params.set('_subject', 'Новый гость на день рождения');
     return fetch('https://formsubmit.co/ajax/' + GUEST_EMAIL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({
-        name: data.name,
-        phone: data.phone,
-        attend: data.attend,
-        message: 'Гость: ' + data.name + ' (' + data.phone + ') — ' + data.attend + '. Заполнено: ' + data.date,
-        _subject: 'Новый гость на день рождения'
-      })
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'Accept': 'application/json' },
+      body: params.toString()
     }).then(function (r) { return r.json(); });
   }
 
   document.getElementById('guest-form').addEventListener('submit', function (e) {
     e.preventDefault();
+    var btn = this.querySelector('button[type="submit"]');
     var attend = this.querySelector('input[name="attend"]:checked');
     var data = {
       name: this.name.value.trim(),
@@ -705,16 +685,29 @@
       date: new Date().toLocaleString('ru-RU')
     };
 
-    var all = saveGuest(data);
-    downloadGuests(all);
+    saveGuest(data);
 
     var form = this;
-    if (GUEST_EMAIL) {
-      sendGuestEmail(data)['catch'](function () {});
-    }
+    var thanks = document.getElementById('thanks');
 
-    form.style.display = 'none';
-    document.getElementById('thanks').style.display = 'block';
+    if (GUEST_EMAIL) {
+      btn.disabled = true;
+      btn.textContent = 'Отправляем…';
+      sendGuestEmail(data).then(function (res) {
+        thanks.textContent = (res && res.success === 'true')
+          ? 'Спасибо! Ответ отправлен организатору.'
+          : 'Спасибо! Если письмо не придёт — свяжитесь с нами по телефону.';
+        form.style.display = 'none';
+        thanks.style.display = 'block';
+      })['catch'](function () {
+        thanks.textContent = 'Спасибо! Если письмо не придёт — свяжитесь с нами по телефону.';
+        form.style.display = 'none';
+        thanks.style.display = 'block';
+      });
+    } else {
+      form.style.display = 'none';
+      thanks.style.display = 'block';
+    }
   });
 
   // ===== Пинг-понг =====
@@ -1090,7 +1083,7 @@
     var nextSpawn = 0;
 
     function spawnBalloon() {
-      var r = 15 + Math.random() * 13;
+      var r = 26 + Math.random() * 14;
       balloons.push({
         x: W * (0.08 + Math.random() * 0.84),
         y: H + r + 10,
@@ -1128,8 +1121,8 @@
 
     function step() {
       if (performance.now() > nextSpawn) {
-        if (balloons.length < 15) spawnBalloon();
-        nextSpawn = performance.now() + 480 + Math.random() * 750;
+        if (balloons.length < 12) spawnBalloon();
+        nextSpawn = performance.now() + 520 + Math.random() * 800;
       }
 
       for (var i = balloons.length - 1; i >= 0; i--) {
@@ -1166,28 +1159,41 @@
       }
       ctx.stroke();
 
-      var g = ctx.createLinearGradient(b.x - b.r, top, b.x + b.r, top + b.r * 2.4);
-      g.addColorStop(0, 'rgba(255,255,255,' + (0.5 * b.alpha) + ')');
-      g.addColorStop(0.3, b.color);
-      g.addColorStop(1, 'rgba(0,0,0,0.16)');
+      var g = ctx.createRadialGradient(b.x - b.r * 0.35, b.y - b.r * 0.45, b.r * 0.15, b.x, b.y, b.r * 1.35);
+      g.addColorStop(0, 'rgba(255,255,255,' + (0.9 * b.alpha) + ')');
+      g.addColorStop(0.35, b.color);
+      g.addColorStop(1, 'rgba(50, 25, 12, 0.5)');
       ctx.globalAlpha = b.alpha;
       ctx.fillStyle = g;
       ctx.beginPath();
       ctx.ellipse(b.x, b.y, b.r, b.r * 1.26, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.globalAlpha = 0.75 * b.alpha;
-      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.globalAlpha = 0.35 * b.alpha;
+      ctx.strokeStyle = 'rgba(60, 30, 15, 0.5)';
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.ellipse(b.x - b.r * 0.38, b.y - b.r * 0.45, b.r * 0.22, b.r * 0.15, -0.6, 0, Math.PI * 2);
+      ctx.ellipse(b.x, b.y + b.r * 0.22, b.r * 0.9, b.r * 0.5, 0, 0.15 * Math.PI, 0.85 * Math.PI);
+      ctx.stroke();
+
+      ctx.globalAlpha = 0.85 * b.alpha;
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.beginPath();
+      ctx.ellipse(b.x - b.r * 0.4, b.y - b.r * 0.42, b.r * 0.26, b.r * 0.18, -0.6, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.globalAlpha = 0.55 * b.alpha;
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.beginPath();
+      ctx.ellipse(b.x - b.r * 0.1, b.y + b.r * 0.45, b.r * 0.14, b.r * 0.1, -0.4, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.globalAlpha = b.alpha;
       ctx.fillStyle = 'rgba(120, 80, 50, 0.9)';
       ctx.beginPath();
       ctx.moveTo(b.x, b.y + b.r * 1.26);
-      ctx.lineTo(b.x - 3, b.y + b.r * 1.26 + 5);
-      ctx.lineTo(b.x + 3, b.y + b.r * 1.26 + 5);
+      ctx.lineTo(b.x - 4, b.y + b.r * 1.26 + 6);
+      ctx.lineTo(b.x + 4, b.y + b.r * 1.26 + 6);
       ctx.closePath();
       ctx.fill();
       ctx.globalAlpha = 1;
@@ -1210,6 +1216,23 @@
         drawBalloon(balloons[j]);
       }
     }
+
+    // Клик по шарику — он лопается
+    canvas.addEventListener('click', function (e) {
+      var rect = canvas.getBoundingClientRect();
+      var x = (e.clientX - rect.left) * (W / rect.width);
+      var y = (e.clientY - rect.top) * (H / rect.height);
+      for (var i = balloons.length - 1; i >= 0; i--) {
+        var b = balloons[i];
+        var dx = x - b.x;
+        var dy = y - b.y;
+        if ((dx * dx) / (b.r * b.r) + (dy * dy) / (b.r * 1.26 * b.r * 1.26) <= 1) {
+          popAt(b.x, b.y, b.color);
+          balloons.splice(i, 1);
+          break;
+        }
+      }
+    });
 
     function loop() {
       if (heroVisible()) {
