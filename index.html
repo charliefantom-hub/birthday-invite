@@ -119,6 +119,52 @@
     50%      { transform: translate(-50%, 10px); }
   }
 
+  /* ===== Кнопка музыки (закреплена, всегда видна) ===== */
+  .music-btn {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 100;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f0c419, #f2994a);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(180, 120, 30, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+    transition: transform 0.2s, box-shadow 0.3s;
+  }
+  .music-btn:hover { transform: scale(1.08); }
+  .music-btn:active { transform: scale(0.96); }
+  .music-btn .note {
+    font-size: 26px;
+    line-height: 1;
+    font-family: 'Segoe UI Symbol', Arial, sans-serif;
+    text-shadow: 0 2px 6px rgba(120, 70, 10, 0.45);
+  }
+  .music-btn.playing { animation: music-pulse 1.9s ease-in-out infinite; }
+  .music-btn.muted { background: linear-gradient(135deg, #8a8372, #6f6959); }
+  .music-btn.muted .note { opacity: 0.45; }
+  .music-btn.muted::after {
+    content: '';
+    position: absolute;
+    width: 62%;
+    height: 2.5px;
+    border-radius: 2px;
+    background: #fff;
+    transform: rotate(-45deg);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+
+  @keyframes music-pulse {
+    0%, 100% { box-shadow: 0 6px 20px rgba(180, 120, 30, 0.45), 0 0 0 0 rgba(240, 196, 25, 0.55); }
+    50%      { box-shadow: 0 6px 20px rgba(180, 120, 30, 0.45), 0 0 0 13px rgba(240, 196, 25, 0); }
+  }
+
   /* ===== Секции и контейнеры ===== */
   .section {
     padding: 70px 24px;
@@ -438,10 +484,15 @@
 
 <audio id="bg-music" src="song.mp3" loop preload="auto"></audio>
 
+<button class="music-btn" id="music-btn" aria-label="Выключить музыку" title="Выключить музыку">
+  <span class="note">&#9835;</span>
+</button>
+
 <!-- Обложка -->
 <section class="hero" id="top">
   <div class="tint"></div>
   <canvas id="fireworks" class="hero-canvas"></canvas>
+  <canvas id="balloons" class="hero-canvas"></canvas>
   <div class="inner">
     <div class="kicker">Приглашение на день рождения</div>
     <h1>Нашему малышу<br>исполняется 3 года!</h1>
@@ -607,7 +658,7 @@
   // Отправка анкеты: данные копятся в localStorage,
   // каждый ответ скачивается в отдельный файл guests.json,
   // а если ниже указан GUEST_EMAIL — ответ также уходит на почту через formsubmit.co
-  var GUEST_EMAIL = ''; // пример: 'mybirthday@gmail.com'
+  var GUEST_EMAIL = 'charliefantom@gmail.com'; // ответы гостей приходят сюда через formsubmit.co
 
   function saveGuest(data) {
     var all = [];
@@ -1018,22 +1069,205 @@
     loop();
   })();
 
-  // ===== Музыка: автозапуск при первом взаимодействии =====
-  // Браузеры блокируют звук без действия пользователя,
-  // поэтому музыка включается сама при первом клике/касании в любом месте страницы
+  // ===== Шарики: поднимаются и лопаются наверху =====
   (function () {
-    var audio = document.getElementById('bg-music');
-    if (!audio) return;
+    var canvas = document.getElementById('balloons');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var hero = document.getElementById('top');
 
-    function tryPlay() {
-      if (audio.paused) {
-        var p = audio.play();
-        if (p && p['catch']) p['catch'](function () {});
+    var W, H;
+    function resize() {
+      W = canvas.width = hero.offsetWidth;
+      H = canvas.height = hero.offsetHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    var palette = ['#f0c419', '#f2994a', '#ffd166', '#ff6b6b', '#ff9bb2', '#e8a0bf', '#a8d8ea', '#fff3c9'];
+    var balloons = [];
+    var pops = [];
+    var nextSpawn = 0;
+
+    function spawnBalloon() {
+      var r = 15 + Math.random() * 13;
+      balloons.push({
+        x: W * (0.08 + Math.random() * 0.84),
+        y: H + r + 10,
+        r: r,
+        vy: -(0.55 + Math.random() * 0.85),
+        sway: 0.4 + Math.random() * 1.1,
+        swaySpeed: 0.004 + Math.random() * 0.006,
+        swayPhase: Math.random() * Math.PI * 2,
+        color: palette[Math.floor(Math.random() * palette.length)],
+        alpha: 0
+      });
+    }
+
+    function popAt(x, y, color) {
+      var count = 9 + Math.floor(Math.random() * 7);
+      for (var i = 0; i < count; i++) {
+        var a = Math.random() * Math.PI * 2;
+        var sp = 1 + Math.random() * 3;
+        pops.push({
+          x: x, y: y,
+          vx: Math.cos(a) * sp,
+          vy: Math.sin(a) * sp,
+          color: color,
+          life: 1,
+          decay: 0.03 + Math.random() * 0.03,
+          r: 1.4 + Math.random() * 2
+        });
       }
     }
 
+    function heroVisible() {
+      var r = hero.getBoundingClientRect();
+      return r.bottom > 0 && r.top < window.innerHeight;
+    }
+
+    function step() {
+      if (performance.now() > nextSpawn) {
+        if (balloons.length < 15) spawnBalloon();
+        nextSpawn = performance.now() + 480 + Math.random() * 750;
+      }
+
+      for (var i = balloons.length - 1; i >= 0; i--) {
+        var b = balloons[i];
+        if (b.alpha < 1) b.alpha = Math.min(1, b.alpha + 0.045);
+        b.y += b.vy;
+        b.x += Math.cos(b.swayPhase) * b.sway;
+        b.swayPhase += b.swaySpeed;
+        if (b.y + b.r < -8) {
+          popAt(b.x, 6, b.color);
+          balloons.splice(i, 1);
+        }
+      }
+
+      for (var j = pops.length - 1; j >= 0; j--) {
+        var p = pops[j];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.12;
+        p.life -= p.decay;
+        if (p.life <= 0) pops.splice(j, 1);
+      }
+    }
+
+    function drawBalloon(b) {
+      var top = b.y - b.r;
+
+      ctx.strokeStyle = 'rgba(120, 90, 60, ' + (0.45 * b.alpha) + ')';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(b.x, b.y);
+      for (var s = 1; s <= 4; s++) {
+        ctx.lineTo(b.x + Math.sin(b.swayPhase + s * 1.4) * 2.5, b.y + s * 12);
+      }
+      ctx.stroke();
+
+      var g = ctx.createLinearGradient(b.x - b.r, top, b.x + b.r, top + b.r * 2.4);
+      g.addColorStop(0, 'rgba(255,255,255,' + (0.5 * b.alpha) + ')');
+      g.addColorStop(0.3, b.color);
+      g.addColorStop(1, 'rgba(0,0,0,0.16)');
+      ctx.globalAlpha = b.alpha;
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.ellipse(b.x, b.y, b.r, b.r * 1.26, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.globalAlpha = 0.75 * b.alpha;
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.beginPath();
+      ctx.ellipse(b.x - b.r * 0.38, b.y - b.r * 0.45, b.r * 0.22, b.r * 0.15, -0.6, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.globalAlpha = b.alpha;
+      ctx.fillStyle = 'rgba(120, 80, 50, 0.9)';
+      ctx.beginPath();
+      ctx.moveTo(b.x, b.y + b.r * 1.26);
+      ctx.lineTo(b.x - 3, b.y + b.r * 1.26 + 5);
+      ctx.lineTo(b.x + 3, b.y + b.r * 1.26 + 5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+
+      for (var i = 0; i < pops.length; i++) {
+        var p = pops[i];
+        ctx.globalAlpha = Math.max(0, p.life);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      for (var j = 0; j < balloons.length; j++) {
+        drawBalloon(balloons[j]);
+      }
+    }
+
+    function loop() {
+      if (heroVisible()) {
+        step();
+        draw();
+      }
+      requestAnimationFrame(loop);
+    }
+    loop();
+  })();
+
+  // ===== Музыка: автозапуск + кнопка выключения =====
+  // Браузеры блокируют звук без действия пользователя,
+  // поэтому музыка включается сама при первом клике/касании в любом месте страницы,
+  // а закреплённая кнопка справа внизу позволяет её выключить/включить в любой момент
+  (function () {
+    var audio = document.getElementById('bg-music');
+    var btn = document.getElementById('music-btn');
+    if (!audio) return;
+
+    function setState() {
+      if (!btn) return;
+      if (audio.paused) {
+        btn.classList.remove('playing');
+        btn.classList.add('muted');
+        btn.setAttribute('aria-label', 'Включить музыку');
+        btn.title = 'Включить музыку';
+      } else {
+        btn.classList.add('playing');
+        btn.classList.remove('muted');
+        btn.setAttribute('aria-label', 'Выключить музыку');
+        btn.title = 'Выключить музыку';
+      }
+    }
+
+    function playMusic() {
+      var p = audio.play();
+      if (p && p['then']) {
+        p['then'](function () { setState(); })['catch'](function () {});
+      } else {
+        setState();
+      }
+    }
+
+    function toggle() {
+      if (audio.paused) playMusic();
+      else audio.pause();
+    }
+
+    if (btn) btn.addEventListener('click', toggle);
+
+    audio.addEventListener('play', setState);
+    audio.addEventListener('pause', setState);
+    audio.addEventListener('ended', setState);
+    setState();
+
     // Попытка сразу при загрузке (сработает, если браузер разрешает)
-    tryPlay();
+    playMusic();
 
     // И при первом взаимодействии пользователя с страницей
     var started = false;
@@ -1041,7 +1275,7 @@
     function onUser() {
       if (started) return;
       started = true;
-      tryPlay();
+      playMusic();
       events.forEach(function (e) { document.removeEventListener(e, onUser, true); });
     }
     events.forEach(function (e) { document.addEventListener(e, onUser, true); });
