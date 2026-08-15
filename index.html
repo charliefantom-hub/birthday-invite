@@ -505,61 +505,6 @@
     font-size: 14px;
     background: linear-gradient(135deg, var(--gold) 0%, var(--peach) 100%);
   }
-
-  /* ===== Праздничный взрыв после отправки формы ===== */
-  .celebrate {
-    position: fixed;
-    inset: 0;
-    z-index: 90;
-    pointer-events: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(40, 20, 8, 0.35);
-    opacity: 0;
-    transition: opacity 0.35s;
-  }
-  .celebrate.show { opacity: 1; }
-  .celebrate canvas {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-  }
-  .celebrate-msg {
-    position: relative;
-    text-align: center;
-    color: #fff;
-    text-shadow: 0 4px 30px rgba(0, 0, 0, 0.55);
-    padding: 0 20px;
-  }
-  .celebrate-big {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: clamp(44px, 10vw, 78px);
-    font-weight: 700;
-  }
-  .celebrate-sub {
-    font-size: clamp(15px, 4vw, 20px);
-    margin-top: 12px;
-    opacity: 0.95;
-  }
-
-  /* ===== Треснувшее «стекло» ===== */
-  .crack-layer {
-    position: fixed;
-    inset: 0;
-    z-index: 85;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 1.4s ease;
-  }
-  .crack-layer.show { opacity: 1; }
-  .crack-layer svg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-  }
 </style>
 </head>
 <body>
@@ -708,15 +653,6 @@
   <p>С радостью, семья именинника</p>
 </footer>
 
-<div class="celebrate" id="celebrate" aria-hidden="true">
-  <canvas id="celebrate-canvas"></canvas>
-  <div class="celebrate-msg">
-    <div class="celebrate-big">Спасибо!</div>
-    <div class="celebrate-sub">Ваш ответ отправлен организатору</div>
-  </div>
-</div>
-<div class="crack-layer" id="crack-layer" aria-hidden="true"></div>
-
 <script>
   // Плавная прокрутка к следующему блоку
   function scrollDown(btn) {
@@ -789,17 +725,14 @@
           : 'Спасибо! Если письмо не придёт — свяжитесь с нами по телефону.';
         form.style.display = 'none';
         thanks.style.display = 'block';
-        if (window.showCelebration) window.showCelebration();
       })['catch'](function () {
         thanks.textContent = 'Спасибо! Если письмо не придёт — свяжитесь с нами по телефону.';
         form.style.display = 'none';
         thanks.style.display = 'block';
-        if (window.showCelebration) window.showCelebration();
       });
     } else {
       form.style.display = 'none';
       thanks.style.display = 'block';
-      if (window.showCelebration) window.showCelebration();
     }
   });
 
@@ -819,6 +752,7 @@
     var paddleW = 12, paddleH = 110;
     var cpuPaddleH = 72;
     var ballR = 8;
+    var cpuError = 0;
 
     var state = 'menu'; // menu | play | over
     var playerY, cpuY, ball, velX, velY, speed;
@@ -828,6 +762,7 @@
       ball = { x: W / 2, y: H / 2 };
       var angle = (Math.random() * 0.8 + 0.3) * Math.PI;
       var dir = Math.random() < 0.5 ? 1 : -1;
+      if (dir === 1) cpuError = (Math.random() - 0.5) * 34;
       velX = Math.cos(angle) * speed * dir;
       velY = Math.sin(angle) * speed * (Math.random() < 0.5 ? 1 : -1);
     }
@@ -836,7 +771,7 @@
       scoreP = 0; scoreC = 0;
       playerY = H / 2 - paddleH / 2;
       cpuY = H / 2 - cpuPaddleH / 2;
-      speed = 4.2;
+      speed = 5.6;
       resetBall();
       updateScore();
     }
@@ -847,7 +782,7 @@
     }
 
     function serve() {
-      speed = 4.2;
+      speed = 5.6;
       resetBall();
     }
 
@@ -912,11 +847,18 @@
       if (keys['s'] || keys['arrowdown']) playerY += 8;
       playerY = Math.max(0, Math.min(H - paddleH, playerY));
 
-      // ИИ: медленный и не всегда успевает
-      var cpuSpeed = Math.min(3.1, speed * 0.6);
+      // ИИ: реагирует с ошибкой и не всегда успевает
+      var cpuSpeed = Math.min(3.6, speed * 0.7);
+      var cpuTarget = ball.y - cpuPaddleH / 2 + cpuError;
       if (velX > 0) {
-        if (cpuY + cpuPaddleH / 2 < ball.y - 8) cpuY += cpuSpeed;
-        else if (cpuY + cpuPaddleH / 2 > ball.y + 8) cpuY -= cpuSpeed;
+        if (ball.x > W - 340) {
+          if (cpuY + cpuPaddleH / 2 < cpuTarget) cpuY += cpuSpeed;
+          else if (cpuY + cpuPaddleH / 2 > cpuTarget) cpuY -= cpuSpeed;
+        } else {
+          // мяч ещё далеко — ИИ лишь слегка смещается
+          if (cpuY + cpuPaddleH / 2 < ball.y) cpuY += cpuSpeed * 0.5;
+          else if (cpuY + cpuPaddleH / 2 > ball.y) cpuY -= cpuSpeed * 0.5;
+        }
       } else {
         // пока мяч у игрока — ИИ неторопливо отходит к центру
         if (cpuY + cpuPaddleH / 2 < H / 2) cpuY += 1.1;
@@ -937,9 +879,10 @@
           ball.x - ballR > 20 && ball.y > playerY && ball.y < playerY + paddleH) {
         ball.x = 20 + paddleW + ballR;
         velX = Math.abs(velX);
+        cpuError = (Math.random() - 0.5) * 34;
         var diff = (ball.y - (playerY + paddleH / 2)) / (paddleH / 2);
         velY = diff * 5;
-        if (speed < 7.5) speed += 0.3;
+        if (speed < 8.5) speed += 0.3;
         var norm = Math.hypot(velX, velY);
         velX = (velX / norm) * speed;
         velY = (velY / norm) * speed;
@@ -1019,7 +962,7 @@
 
     btnStart.addEventListener('click', function () {
       if (state === 'over') newGame();
-      else if (state === 'menu') { scoreP = 0; scoreC = 0; playerY = H / 2 - paddleH / 2; cpuY = H / 2 - cpuPaddleH / 2; speed = 4.2; resetBall(); updateScore(); }
+      else if (state === 'menu') { scoreP = 0; scoreC = 0; playerY = H / 2 - paddleH / 2; cpuY = H / 2 - cpuPaddleH / 2; speed = 5.6; resetBall(); updateScore(); }
       state = 'play';
       overlay.classList.add('hidden');
     });
@@ -1411,155 +1354,6 @@
     audio.addEventListener('error', function () {
       console.warn('Музыка не найдена: положите файл song.mp3 в папку сайта.');
     });
-  })();
-
-  // ===== Взрыв и треснувшее «стекло» после отправки формы =====
-  (function () {
-    var celebrateEl = document.getElementById('celebrate');
-    var crackEl = document.getElementById('crack-layer');
-    if (!celebrateEl) return;
-
-    var canvas = document.getElementById('celebrate-canvas');
-    var ctx = canvas ? canvas.getContext('2d') : null;
-
-    function explode() {
-      if (!ctx) return;
-      var W = canvas.width = window.innerWidth;
-      var H = canvas.height = window.innerHeight;
-      var cx = W / 2, cy = H / 2;
-      var colors = ['#f0c419', '#f2994a', '#ff6b6b', '#ffd166', '#e8a0bf', '#a8d8ea', '#ffffff'];
-      var parts = [];
-      for (var i = 0; i < 90; i++) {
-        var a = Math.random() * Math.PI * 2;
-        var sp = 4 + Math.random() * 10;
-        parts.push({
-          x: cx, y: cy,
-          vx: Math.cos(a) * sp,
-          vy: Math.sin(a) * sp - 2,
-          color: colors[i % colors.length],
-          life: 1,
-          decay: 0.012 + Math.random() * 0.02,
-          r: 2 + Math.random() * 3.5
-        });
-      }
-      var start = performance.now();
-      function frame(now) {
-        var t = (now - start) / 1000;
-        ctx.clearRect(0, 0, W, H);
-        ctx.fillStyle = 'rgba(40, 20, 8, 0.06)';
-        ctx.fillRect(0, 0, W, H);
-        var alive = false;
-        for (var j = 0; j < parts.length; j++) {
-          var p = parts[j];
-          p.x += p.vx;
-          p.y += p.vy;
-          p.vy += 0.18;
-          p.life -= p.decay;
-          if (p.life <= 0) continue;
-          alive = true;
-          ctx.globalAlpha = Math.max(0, p.life);
-          ctx.fillStyle = p.color;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.globalAlpha = 1;
-        if (alive && t < 4) requestAnimationFrame(frame);
-      }
-      requestAnimationFrame(frame);
-    }
-
-    function buildCracks() {
-      var NS = 'http://www.w3.org/2000/svg';
-      var svg = document.createElementNS(NS, 'svg');
-      svg.setAttribute('viewBox', '0 0 100 100');
-      svg.setAttribute('preserveAspectRatio', 'none');
-
-      var defs = document.createElementNS(NS, 'defs');
-      var filter = document.createElementNS(NS, 'filter');
-      filter.setAttribute('id', 'soot');
-      filter.setAttribute('x', '-60%');
-      filter.setAttribute('y', '-60%');
-      filter.setAttribute('width', '220%');
-      filter.setAttribute('height', '220%');
-      var blur = document.createElementNS(NS, 'feGaussianBlur');
-      blur.setAttribute('stdDeviation', '1.4');
-      filter.appendChild(blur);
-      defs.appendChild(filter);
-      svg.appendChild(defs);
-
-      var cx = 50, cy = 50;
-
-      function soot(x, y, rx, ry, fill) {
-        var el = document.createElementNS(NS, 'ellipse');
-        el.setAttribute('cx', x);
-        el.setAttribute('cy', y);
-        el.setAttribute('rx', rx);
-        el.setAttribute('ry', ry);
-        el.setAttribute('fill', fill);
-        el.setAttribute('filter', 'url(#soot)');
-        svg.appendChild(el);
-      }
-
-      soot(cx, cy, 18, 13, 'rgba(25, 15, 8, 0.42)');
-      for (var s = 0; s < 7; s++) {
-        var a = Math.random() * Math.PI * 2;
-        var d = 10 + Math.random() * 20;
-        soot(cx + Math.cos(a) * d, cy + Math.sin(a) * d,
-          8 + Math.random() * 16, 6 + Math.random() * 12,
-          ['rgba(30, 18, 10, 0.24)', 'rgba(50, 32, 18, 0.18)', 'rgba(20, 12, 8, 0.3)'][s % 3]);
-      }
-
-      for (var i = 0; i < 15; i++) {
-        var ang = (i / 15) * Math.PI * 2 + Math.random() * 0.4;
-        var len = 20 + Math.random() * 32;
-        var segs = 3 + Math.floor(Math.random() * 3);
-        var px = cx, py = cy;
-        var d = 'M ' + px + ' ' + py;
-        for (var k = 1; k <= segs; k++) {
-          var frac = k / segs;
-          px = cx + Math.cos(ang) * len * frac + (Math.random() - 0.5) * 9;
-          py = cy + Math.sin(ang) * len * frac + (Math.random() - 0.5) * 9;
-          d += ' L ' + px.toFixed(2) + ' ' + py.toFixed(2);
-        }
-        var path = document.createElementNS(NS, 'path');
-        path.setAttribute('d', d);
-        path.setAttribute('fill', 'none');
-        path.setAttribute('stroke', 'rgba(50, 30, 16, 0.7)');
-        path.setAttribute('stroke-width', (0.4 + Math.random() * 0.6).toFixed(2));
-        path.setAttribute('stroke-linecap', 'round');
-        svg.appendChild(path);
-      }
-
-      var ring = document.createElementNS(NS, 'circle');
-      ring.setAttribute('cx', cx);
-      ring.setAttribute('cy', cy);
-      ring.setAttribute('r', 24);
-      ring.setAttribute('fill', 'none');
-      ring.setAttribute('stroke', 'rgba(50, 30, 16, 0.35)');
-      ring.setAttribute('stroke-width', '0.4');
-      ring.setAttribute('stroke-dasharray', '2 1.5');
-      svg.appendChild(ring);
-
-      crackEl.innerHTML = '';
-      crackEl.appendChild(svg);
-    }
-
-    function showCelebration(message) {
-      var sub = celebrateEl.querySelector('.celebrate-sub');
-      if (message) sub.textContent = message;
-      celebrateEl.classList.add('show');
-      explode();
-      setTimeout(function () {
-        buildCracks();
-        crackEl.classList.add('show');
-        setTimeout(function () {
-          celebrateEl.classList.remove('show');
-        }, 1400);
-      }, 2800);
-    }
-
-    window.showCelebration = showCelebration;
   })();
 </script>
 
