@@ -35,6 +35,11 @@
     line-height: 1.6;
     background-color: #fbf0dd;
     background-image:
+      radial-gradient(ellipse 55% 38% at 8% 6%, rgba(240, 196, 25, 0.20) 0, transparent 62%),
+      radial-gradient(ellipse 50% 36% at 92% 20%, rgba(242, 153, 74, 0.18) 0, transparent 62%),
+      radial-gradient(ellipse 45% 38% at 12% 52%, rgba(232, 160, 191, 0.17) 0, transparent 62%),
+      radial-gradient(ellipse 52% 36% at 88% 66%, rgba(168, 216, 234, 0.20) 0, transparent 62%),
+      radial-gradient(ellipse 48% 34% at 50% 42%, rgba(255, 214, 106, 0.15) 0, transparent 62%),
       radial-gradient(circle at 12% 18%, rgba(240, 196, 25, 0.16) 0, rgba(240, 196, 25, 0.16) 10px, transparent 11px),
       radial-gradient(circle at 88% 30%, rgba(242, 153, 74, 0.18) 0, rgba(242, 153, 74, 0.18) 7px, transparent 8px),
       radial-gradient(circle at 30% 64%, rgba(232, 160, 191, 0.16) 0, rgba(232, 160, 191, 0.16) 9px, transparent 10px),
@@ -374,6 +379,15 @@
     font-size: 26px;
     color: #b8860b;
   }
+  .thanks .btn-edit {
+    width: auto;
+    margin-top: 20px;
+    padding: 12px 30px;
+    font-size: 13px;
+    background: var(--peach);
+    color: #fff;
+  }
+  .thanks .btn-edit:hover { background: #df8f7a; }
 
   /* ===== Программа ===== */
   .timeline { list-style: none; }
@@ -468,6 +482,10 @@
   .overlay-note {
     color: #ffd76a;
     font-size: 15px;
+    line-height: 1.55;
+    max-width: 480px;
+    padding: 0 30px;
+    text-align: center;
   }
 
   .btn-game {
@@ -598,7 +616,10 @@
         </div>
       </div>
       <button type="submit" class="btn">Отправить</button>
-      <div class="thanks" id="thanks">Спасибо! Ждём вас на празднике!</div>
+      <div class="thanks" id="thanks">
+        <div class="thanks-text">Спасибо за обратную связь!</div>
+        <button type="button" class="btn btn-edit" id="btn-edit">Изменить данные</button>
+      </div>
     </form>
   </div>
 </section>
@@ -674,9 +695,20 @@
 
   document.querySelectorAll('.reveal').forEach(function (el) { observer.observe(el); });
 
-  // Отправка анкеты: данные копятся в localStorage,
-  // каждый ответ уходит на почту GUEST_EMAIL через formsubmit.co
+  // Отправка анкеты: данные сохраняются в куки, чтобы не спрашивать
+  // одного и того же гостя дважды; каждый ответ уходит на почту GUEST_EMAIL
   var GUEST_EMAIL = 'charliefantom@gmail.com'; // ответы гостей приходят сюда через formsubmit.co
+
+  function getCookie(name) {
+    var m = document.cookie.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]*)'));
+    return m ? decodeURIComponent(m[1]) : '';
+  }
+
+  function setCookie(name, value, days) {
+    var d = new Date();
+    d.setTime(d.getTime() + (days || 365) * 24 * 60 * 60 * 1000);
+    document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + d.toUTCString() + '; path=/';
+  }
 
   function saveGuest(data) {
     var all = [];
@@ -686,13 +718,24 @@
     return all;
   }
 
-  function sendGuestEmail(data) {
+  function prefillForm(data) {
+    var form = document.getElementById('guest-form');
+    if (!form) return;
+    if (data.name) form.name.value = data.name;
+    if (data.phone) form.phone.value = data.phone;
+    var radios = form.querySelectorAll('input[name="attend"]');
+    for (var i = 0; i < radios.length; i++) {
+      radios[i].checked = radios[i].value === data.attend;
+    }
+  }
+
+  function sendGuestEmail(data, editing) {
     var params = new URLSearchParams();
     params.set('name', data.name);
     params.set('phone', data.phone);
     params.set('attend', data.attend);
-    params.set('message', 'Гость: ' + data.name + ' (' + data.phone + ') — ' + data.attend + '. Заполнено: ' + data.date);
-    params.set('_subject', 'Новый гость на день рождения');
+    params.set('message', (editing ? 'Гость изменил данные: ' : 'Гость: ') + data.name + ' (' + data.phone + ') — ' + data.attend + '. Обновлено: ' + data.date);
+    params.set('_subject', editing ? 'Изменились данные гостя' : 'Новый гость на день рождения');
     return fetch('https://formsubmit.co/ajax/' + GUEST_EMAIL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'Accept': 'application/json' },
@@ -700,10 +743,35 @@
     }).then(function (r) { return r.json(); });
   }
 
-  document.getElementById('guest-form').addEventListener('submit', function (e) {
+  var guestForm = document.getElementById('guest-form');
+  var thanksBlock = document.getElementById('thanks');
+  var thanksText = thanksBlock.querySelector('.thanks-text');
+  var editBtn = document.getElementById('btn-edit');
+  var savedGuest = getCookie('guest_data');
+
+  // Гость уже заполнял анкету — показываем баннер вместо формы
+  if (savedGuest) {
+    guestForm.style.display = 'none';
+    thanksText.textContent = 'Спасибо за обратную связь!';
+    thanksBlock.style.display = 'block';
+  }
+
+  editBtn.addEventListener('click', function () {
+    try {
+      var d = JSON.parse(savedGuest || getCookie('guest_data') || 'null');
+      if (d) prefillForm(d);
+    } catch (err) {}
+    guestForm.querySelector('button[type="submit"]').textContent = 'Сохранить изменения';
+    thanksBlock.style.display = 'none';
+    guestForm.style.display = '';
+    document.getElementById('rsvp').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  guestForm.addEventListener('submit', function (e) {
     e.preventDefault();
     var btn = this.querySelector('button[type="submit"]');
     var attend = this.querySelector('input[name="attend"]:checked');
+    var editing = !!getCookie('guest_data');
     var data = {
       name: this.name.value.trim(),
       phone: this.phone.value.trim(),
@@ -712,27 +780,27 @@
     };
 
     saveGuest(data);
+    setCookie('guest_data', JSON.stringify(data), 365);
 
     var form = this;
-    var thanks = document.getElementById('thanks');
 
     if (GUEST_EMAIL) {
       btn.disabled = true;
       btn.textContent = 'Отправляем…';
-      sendGuestEmail(data).then(function (res) {
-        thanks.textContent = (res && res.success === 'true')
-          ? 'Спасибо! Ответ отправлен организатору.'
-          : 'Спасибо! Если письмо не придёт — свяжитесь с нами по телефону.';
+      sendGuestEmail(data, editing).then(function (res) {
+        thanksText.textContent = (res && res.success === 'true')
+          ? 'Спасибо за обратную связь!'
+          : 'Спасибо за обратную связь! Если письмо не придёт — свяжитесь с нами по телефону.';
         form.style.display = 'none';
-        thanks.style.display = 'block';
+        thanksBlock.style.display = 'block';
       })['catch'](function () {
-        thanks.textContent = 'Спасибо! Если письмо не придёт — свяжитесь с нами по телефону.';
+        thanksText.textContent = 'Спасибо за обратную связь! Если письмо не придёт — свяжитесь с нами по телефону.';
         form.style.display = 'none';
-        thanks.style.display = 'block';
+        thanksBlock.style.display = 'block';
       });
     } else {
       form.style.display = 'none';
-      thanks.style.display = 'block';
+      thanksBlock.style.display = 'block';
     }
   });
 
@@ -754,24 +822,33 @@
     var ballR = 8;
     var cpuError = 0;
 
+    var isMobile = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent) ||
+                   (navigator.maxTouchPoints > 0 && window.innerWidth < 900);
+    function baseSpeed() { return isMobile ? 7.4 : 5.6; }
+    function maxSpeed()  { return isMobile ? 10.5 : 8.5; }
+
     var state = 'menu'; // menu | play | over
     var playerY, cpuY, ball, velX, velY, speed;
     var scoreP, scoreC;
 
     function resetBall() {
       ball = { x: W / 2, y: H / 2 };
-      var angle = (Math.random() * 0.8 + 0.3) * Math.PI;
+      var angle = (Math.random() * 0.4 + 0.3) * Math.PI;
       var dir = Math.random() < 0.5 ? 1 : -1;
       if (dir === 1) cpuError = (Math.random() - 0.5) * 34;
       velX = Math.cos(angle) * speed * dir;
       velY = Math.sin(angle) * speed * (Math.random() < 0.5 ? 1 : -1);
+      // страховка от «застывшего» шарика: обе составляющие всегда заметные
+      var minV = speed * 0.3;
+      if (Math.abs(velX) < minV) velX = minV * (velX < 0 ? -1 : 1);
+      if (Math.abs(velY) < minV) velY = minV * (velY < 0 ? -1 : 1);
     }
 
     function newGame() {
       scoreP = 0; scoreC = 0;
       playerY = H / 2 - paddleH / 2;
       cpuY = H / 2 - cpuPaddleH / 2;
-      speed = 5.6;
+      speed = baseSpeed();
       resetBall();
       updateScore();
     }
@@ -782,7 +859,7 @@
     }
 
     function serve() {
-      speed = 5.6;
+      speed = baseSpeed();
       resetBall();
     }
 
@@ -873,6 +950,8 @@
       // Стены
       if (ball.y - ballR < 0) { ball.y = ballR; velY = -velY; }
       if (ball.y + ballR > H) { ball.y = H - ballR; velY = -velY; }
+      // страховка: шарик никогда не застывает на одной вертикали
+      if (Math.abs(velX) < 1.2) velX = 1.2 * (velX < 0 ? -1 : 1);
 
       // Ракетки
       if (velX < 0 && ball.x - ballR < 20 + paddleW &&
@@ -882,7 +961,7 @@
         cpuError = (Math.random() - 0.5) * 34;
         var diff = (ball.y - (playerY + paddleH / 2)) / (paddleH / 2);
         velY = diff * 5;
-        if (speed < 8.5) speed += 0.3;
+        if (speed < maxSpeed()) speed += 0.3;
         var norm = Math.hypot(velX, velY);
         velX = (velX / norm) * speed;
         velY = (velY / norm) * speed;
@@ -962,7 +1041,7 @@
 
     btnStart.addEventListener('click', function () {
       if (state === 'over') newGame();
-      else if (state === 'menu') { scoreP = 0; scoreC = 0; playerY = H / 2 - paddleH / 2; cpuY = H / 2 - cpuPaddleH / 2; speed = 5.6; resetBall(); updateScore(); }
+      else if (state === 'menu') { scoreP = 0; scoreC = 0; playerY = H / 2 - paddleH / 2; cpuY = H / 2 - cpuPaddleH / 2; speed = baseSpeed(); resetBall(); updateScore(); }
       state = 'play';
       overlay.classList.add('hidden');
     });
