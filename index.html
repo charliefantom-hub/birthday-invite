@@ -769,7 +769,6 @@
 
   guestForm.addEventListener('submit', function (e) {
     e.preventDefault();
-    var btn = this.querySelector('button[type="submit"]');
     var attend = this.querySelector('input[name="attend"]:checked');
     var editing = !!getCookie('guest_data');
     var data = {
@@ -782,25 +781,19 @@
     saveGuest(data);
     setCookie('guest_data', JSON.stringify(data), 365);
 
-    var form = this;
+    // Показываем баннер сразу, не дожидаясь почты (FormSubmit отвечает медленно)
+    thanksText.textContent = 'Спасибо за обратную связь!';
+    this.style.display = 'none';
+    thanksBlock.style.display = 'block';
 
     if (GUEST_EMAIL) {
-      btn.disabled = true;
-      btn.textContent = 'Отправляем…';
       sendGuestEmail(data, editing).then(function (res) {
-        thanksText.textContent = (res && res.success === 'true')
-          ? 'Спасибо за обратную связь!'
-          : 'Спасибо за обратную связь! Если письмо не придёт — свяжитесь с нами по телефону.';
-        form.style.display = 'none';
-        thanksBlock.style.display = 'block';
+        if (!res || res.success !== 'true') {
+          thanksText.textContent = 'Спасибо за обратную связь! Если письмо не придёт — свяжитесь с нами по телефону.';
+        }
       })['catch'](function () {
         thanksText.textContent = 'Спасибо за обратную связь! Если письмо не придёт — свяжитесь с нами по телефону.';
-        form.style.display = 'none';
-        thanksBlock.style.display = 'block';
       });
-    } else {
-      form.style.display = 'none';
-      thanksBlock.style.display = 'block';
     }
   });
 
