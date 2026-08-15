@@ -18,6 +18,9 @@
     --gold: #f0c419;
     --gold-dark: #d9ab00;
     --peach: #f2994a;
+    --rose: #e8a0bf;
+    --sky: #a8d8ea;
+    --coral: #ff6b6b;
     --line: #efe6c8;
   }
 
@@ -27,10 +30,17 @@
 
   body {
     font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
-    background: var(--bg);
     color: var(--text);
     -webkit-font-smoothing: antialiased;
     line-height: 1.6;
+    background-color: #fbf0dd;
+    background-image:
+      radial-gradient(circle at 12% 18%, rgba(240, 196, 25, 0.16) 0, rgba(240, 196, 25, 0.16) 10px, transparent 11px),
+      radial-gradient(circle at 88% 30%, rgba(242, 153, 74, 0.18) 0, rgba(242, 153, 74, 0.18) 7px, transparent 8px),
+      radial-gradient(circle at 30% 64%, rgba(232, 160, 191, 0.16) 0, rgba(232, 160, 191, 0.16) 9px, transparent 10px),
+      radial-gradient(circle at 72% 80%, rgba(168, 216, 234, 0.18) 0, rgba(168, 216, 234, 0.18) 6px, transparent 7px),
+      radial-gradient(circle at 55% 40%, rgba(255, 214, 106, 0.14) 0, rgba(255, 214, 106, 0.14) 8px, transparent 9px),
+      linear-gradient(180deg, #fdf6ec 0%, #fbead4 50%, #f7e1ca 100%);
   }
 
   h1, h2, h3, .serif {
@@ -186,8 +196,9 @@
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: 18px;
+    border-top: 4px solid var(--gold);
     padding: 46px 42px;
-    box-shadow: 0 14px 40px rgba(58, 47, 22, 0.08);
+    box-shadow: 0 14px 40px rgba(58, 47, 22, 0.1);
   }
 
   .section-head {
@@ -196,11 +207,16 @@
   }
 
   .section-head .label {
+    display: inline-block;
     font-size: 12px;
-    letter-spacing: 5px;
+    letter-spacing: 3px;
     text-transform: uppercase;
     color: var(--peach);
-    margin-bottom: 10px;
+    margin-bottom: 12px;
+    background: rgba(242, 153, 74, 0.14);
+    border: 1px solid rgba(242, 153, 74, 0.32);
+    padding: 5px 14px;
+    border-radius: 20px;
   }
 
   .section-head h2 {
@@ -249,6 +265,10 @@
     padding: 24px 20px;
     text-align: center;
   }
+  .info-card:nth-child(1) { background: #fdf3dd; border-color: #f0d9a8; }
+  .info-card:nth-child(2) { background: #fdeae3; border-color: #f2c4ae; }
+  .info-card:nth-child(3) { background: #f9eef2; border-color: #ecc7d6; }
+  .info-card:nth-child(4) { background: #eaf2f4; border-color: #bfd8de; }
   .info-card .ic-label {
     font-size: 12px;
     letter-spacing: 4px;
@@ -367,8 +387,13 @@
   .timeline .time {
     min-width: 74px;
     font-weight: 700;
-    color: var(--peach);
-    font-size: 17px;
+    color: #fff;
+    font-size: 16px;
+    background: linear-gradient(135deg, var(--gold), var(--peach));
+    border-radius: 10px;
+    padding: 7px 10px;
+    text-align: center;
+    box-shadow: 0 3px 10px rgba(180, 120, 30, 0.25);
   }
   .timeline .desc { color: var(--text); font-size: 16px; }
 
@@ -398,6 +423,7 @@
     font-size: 14px;
     margin-bottom: 18px;
   }
+  .game-hint b { color: var(--gold-dark); font-weight: 700; }
 
   .game-wrap {
     position: relative;
@@ -475,9 +501,64 @@
   footer {
     text-align: center;
     padding: 40px 20px;
-    color: var(--muted);
+    color: #fff;
     font-size: 14px;
-    border-top: 1px solid var(--line);
+    background: linear-gradient(135deg, var(--gold) 0%, var(--peach) 100%);
+  }
+
+  /* ===== Праздничный взрыв после отправки формы ===== */
+  .celebrate {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(40, 20, 8, 0.35);
+    opacity: 0;
+    transition: opacity 0.35s;
+  }
+  .celebrate.show { opacity: 1; }
+  .celebrate canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .celebrate-msg {
+    position: relative;
+    text-align: center;
+    color: #fff;
+    text-shadow: 0 4px 30px rgba(0, 0, 0, 0.55);
+    padding: 0 20px;
+  }
+  .celebrate-big {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(44px, 10vw, 78px);
+    font-weight: 700;
+  }
+  .celebrate-sub {
+    font-size: clamp(15px, 4vw, 20px);
+    margin-top: 12px;
+    opacity: 0.95;
+  }
+
+  /* ===== Треснувшее «стекло» ===== */
+  .crack-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 85;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 1.4s ease;
+  }
+  .crack-layer.show { opacity: 1; }
+  .crack-layer svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
   }
 </style>
 </head>
@@ -607,7 +688,7 @@
       <h2>Сыграйте в пинг-понг!</h2>
       <div class="line"></div>
     </div>
-    <p class="game-hint">Управляйте ракеткой пальцем, мышью или клавишами &uarr; &darr; / W S. Первый до 5 очков.</p>
+    <p class="game-hint">Управляйте ракеткой пальцем, мышью или клавишами &uarr; &darr; / W S. Первый до 5 очков. <b>Победителю — бесплатная бутылочка пивка!</b></p>
     <div class="game-wrap">
       <canvas id="pong" width="800" height="450"></canvas>
       <div class="game-overlay" id="game-overlay">
@@ -626,6 +707,15 @@
 <footer>
   <p>С радостью, семья именинника</p>
 </footer>
+
+<div class="celebrate" id="celebrate" aria-hidden="true">
+  <canvas id="celebrate-canvas"></canvas>
+  <div class="celebrate-msg">
+    <div class="celebrate-big">Спасибо!</div>
+    <div class="celebrate-sub">Ваш ответ отправлен организатору</div>
+  </div>
+</div>
+<div class="crack-layer" id="crack-layer" aria-hidden="true"></div>
 
 <script>
   // Плавная прокрутка к следующему блоку
@@ -699,14 +789,17 @@
           : 'Спасибо! Если письмо не придёт — свяжитесь с нами по телефону.';
         form.style.display = 'none';
         thanks.style.display = 'block';
+        if (window.showCelebration) window.showCelebration();
       })['catch'](function () {
         thanks.textContent = 'Спасибо! Если письмо не придёт — свяжитесь с нами по телефону.';
         form.style.display = 'none';
         thanks.style.display = 'block';
+        if (window.showCelebration) window.showCelebration();
       });
     } else {
       form.style.display = 'none';
       thanks.style.display = 'block';
+      if (window.showCelebration) window.showCelebration();
     }
   });
 
@@ -723,7 +816,8 @@
     var scoreCpu = document.getElementById('score-cpu');
 
     var WIN = 5;
-    var paddleW = 12, paddleH = 92;
+    var paddleW = 12, paddleH = 110;
+    var cpuPaddleH = 72;
     var ballR = 8;
 
     var state = 'menu'; // menu | play | over
@@ -741,8 +835,8 @@
     function newGame() {
       scoreP = 0; scoreC = 0;
       playerY = H / 2 - paddleH / 2;
-      cpuY = H / 2 - paddleH / 2;
-      speed = 5;
+      cpuY = H / 2 - cpuPaddleH / 2;
+      speed = 4.2;
       resetBall();
       updateScore();
     }
@@ -753,14 +847,20 @@
     }
 
     function serve() {
-      speed = 5;
+      speed = 4.2;
       resetBall();
     }
 
     function gameOver(winner) {
       state = 'over';
-      overlayTitle.textContent = winner === 'you' ? 'Вы победили!' : 'Победил соперник';
-      document.getElementById('overlay-note').textContent = 'Сыграем ещё разок?';
+      if (winner === 'you') {
+        overlayTitle.textContent = 'Вы победили!';
+        document.getElementById('overlay-note').textContent =
+          'Поздравляем! Вам — бесплатная бутылочка пивка. Назовите организатору кодовое слово «пинг-понг».';
+      } else {
+        overlayTitle.textContent = 'Победил соперник';
+        document.getElementById('overlay-note').textContent = 'Не расстраивайтесь — попробуйте ещё раз!';
+      }
       btnStart.textContent = 'Сыграть ещё раз';
       overlay.classList.remove('hidden');
     }
@@ -812,12 +912,17 @@
       if (keys['s'] || keys['arrowdown']) playerY += 8;
       playerY = Math.max(0, Math.min(H - paddleH, playerY));
 
-      // ИИ
-      var cpuTarget = ball.y - paddleH / 2;
-      var cpuSpeed = Math.min(4.6, speed * 0.85);
-      if (cpuY + paddleH / 2 < ball.y - 6) cpuY += cpuSpeed;
-      else if (cpuY + paddleH / 2 > ball.y + 6) cpuY -= cpuSpeed;
-      cpuY = Math.max(0, Math.min(H - paddleH, cpuY));
+      // ИИ: медленный и не всегда успевает
+      var cpuSpeed = Math.min(3.1, speed * 0.6);
+      if (velX > 0) {
+        if (cpuY + cpuPaddleH / 2 < ball.y - 8) cpuY += cpuSpeed;
+        else if (cpuY + cpuPaddleH / 2 > ball.y + 8) cpuY -= cpuSpeed;
+      } else {
+        // пока мяч у игрока — ИИ неторопливо отходит к центру
+        if (cpuY + cpuPaddleH / 2 < H / 2) cpuY += 1.1;
+        else if (cpuY + cpuPaddleH / 2 > H / 2) cpuY -= 1.1;
+      }
+      cpuY = Math.max(0, Math.min(H - cpuPaddleH, cpuY));
 
       // Мяч
       ball.x += velX;
@@ -833,19 +938,19 @@
         ball.x = 20 + paddleW + ballR;
         velX = Math.abs(velX);
         var diff = (ball.y - (playerY + paddleH / 2)) / (paddleH / 2);
-        velY = diff * 6;
-        if (speed < 9.5) speed += 0.35;
+        velY = diff * 5;
+        if (speed < 7.5) speed += 0.3;
         var norm = Math.hypot(velX, velY);
         velX = (velX / norm) * speed;
         velY = (velY / norm) * speed;
       }
 
       if (velX > 0 && ball.x + ballR > W - 20 - paddleW &&
-          ball.x + ballR < W - 20 && ball.y > cpuY && ball.y < cpuY + paddleH) {
+          ball.x + ballR < W - 20 && ball.y > cpuY && ball.y < cpuY + cpuPaddleH) {
         ball.x = W - 20 - paddleW - ballR;
         velX = -Math.abs(velX);
-        var cd = (ball.y - (cpuY + paddleH / 2)) / (paddleH / 2);
-        velY = cd * 6;
+        var cd = (ball.y - (cpuY + cpuPaddleH / 2)) / (cpuPaddleH / 2);
+        velY = cd * 5;
         var cn = Math.hypot(velX, velY);
         velX = (velX / cn) * speed;
         velY = (velY / cn) * speed;
@@ -890,7 +995,7 @@
       ctx.fillStyle = '#f0c419';
       ctx.fillRect(20, playerY, paddleW, paddleH);
       ctx.fillStyle = '#f2994a';
-      ctx.fillRect(W - 20 - paddleW, cpuY, paddleW, paddleH);
+      ctx.fillRect(W - 20 - paddleW, cpuY, paddleW, cpuPaddleH);
 
       // Мяч
       ctx.beginPath();
@@ -914,7 +1019,7 @@
 
     btnStart.addEventListener('click', function () {
       if (state === 'over') newGame();
-      else if (state === 'menu') { scoreP = 0; scoreC = 0; playerY = H / 2 - paddleH / 2; cpuY = H / 2 - paddleH / 2; speed = 5; resetBall(); updateScore(); }
+      else if (state === 'menu') { scoreP = 0; scoreC = 0; playerY = H / 2 - paddleH / 2; cpuY = H / 2 - cpuPaddleH / 2; speed = 4.2; resetBall(); updateScore(); }
       state = 'play';
       overlay.classList.add('hidden');
     });
@@ -1217,8 +1322,8 @@
       }
     }
 
-    // Клик по шарику — он лопается
-    canvas.addEventListener('click', function (e) {
+    // Шарик лопается по нажатию (pointerdown срабатывает и на телефонах мгновенно)
+    canvas.addEventListener('pointerdown', function (e) {
       var rect = canvas.getBoundingClientRect();
       var x = (e.clientX - rect.left) * (W / rect.width);
       var y = (e.clientY - rect.top) * (H / rect.height);
@@ -1306,6 +1411,155 @@
     audio.addEventListener('error', function () {
       console.warn('Музыка не найдена: положите файл song.mp3 в папку сайта.');
     });
+  })();
+
+  // ===== Взрыв и треснувшее «стекло» после отправки формы =====
+  (function () {
+    var celebrateEl = document.getElementById('celebrate');
+    var crackEl = document.getElementById('crack-layer');
+    if (!celebrateEl) return;
+
+    var canvas = document.getElementById('celebrate-canvas');
+    var ctx = canvas ? canvas.getContext('2d') : null;
+
+    function explode() {
+      if (!ctx) return;
+      var W = canvas.width = window.innerWidth;
+      var H = canvas.height = window.innerHeight;
+      var cx = W / 2, cy = H / 2;
+      var colors = ['#f0c419', '#f2994a', '#ff6b6b', '#ffd166', '#e8a0bf', '#a8d8ea', '#ffffff'];
+      var parts = [];
+      for (var i = 0; i < 90; i++) {
+        var a = Math.random() * Math.PI * 2;
+        var sp = 4 + Math.random() * 10;
+        parts.push({
+          x: cx, y: cy,
+          vx: Math.cos(a) * sp,
+          vy: Math.sin(a) * sp - 2,
+          color: colors[i % colors.length],
+          life: 1,
+          decay: 0.012 + Math.random() * 0.02,
+          r: 2 + Math.random() * 3.5
+        });
+      }
+      var start = performance.now();
+      function frame(now) {
+        var t = (now - start) / 1000;
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = 'rgba(40, 20, 8, 0.06)';
+        ctx.fillRect(0, 0, W, H);
+        var alive = false;
+        for (var j = 0; j < parts.length; j++) {
+          var p = parts[j];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.18;
+          p.life -= p.decay;
+          if (p.life <= 0) continue;
+          alive = true;
+          ctx.globalAlpha = Math.max(0, p.life);
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        if (alive && t < 4) requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    }
+
+    function buildCracks() {
+      var NS = 'http://www.w3.org/2000/svg';
+      var svg = document.createElementNS(NS, 'svg');
+      svg.setAttribute('viewBox', '0 0 100 100');
+      svg.setAttribute('preserveAspectRatio', 'none');
+
+      var defs = document.createElementNS(NS, 'defs');
+      var filter = document.createElementNS(NS, 'filter');
+      filter.setAttribute('id', 'soot');
+      filter.setAttribute('x', '-60%');
+      filter.setAttribute('y', '-60%');
+      filter.setAttribute('width', '220%');
+      filter.setAttribute('height', '220%');
+      var blur = document.createElementNS(NS, 'feGaussianBlur');
+      blur.setAttribute('stdDeviation', '1.4');
+      filter.appendChild(blur);
+      defs.appendChild(filter);
+      svg.appendChild(defs);
+
+      var cx = 50, cy = 50;
+
+      function soot(x, y, rx, ry, fill) {
+        var el = document.createElementNS(NS, 'ellipse');
+        el.setAttribute('cx', x);
+        el.setAttribute('cy', y);
+        el.setAttribute('rx', rx);
+        el.setAttribute('ry', ry);
+        el.setAttribute('fill', fill);
+        el.setAttribute('filter', 'url(#soot)');
+        svg.appendChild(el);
+      }
+
+      soot(cx, cy, 18, 13, 'rgba(25, 15, 8, 0.42)');
+      for (var s = 0; s < 7; s++) {
+        var a = Math.random() * Math.PI * 2;
+        var d = 10 + Math.random() * 20;
+        soot(cx + Math.cos(a) * d, cy + Math.sin(a) * d,
+          8 + Math.random() * 16, 6 + Math.random() * 12,
+          ['rgba(30, 18, 10, 0.24)', 'rgba(50, 32, 18, 0.18)', 'rgba(20, 12, 8, 0.3)'][s % 3]);
+      }
+
+      for (var i = 0; i < 15; i++) {
+        var ang = (i / 15) * Math.PI * 2 + Math.random() * 0.4;
+        var len = 20 + Math.random() * 32;
+        var segs = 3 + Math.floor(Math.random() * 3);
+        var px = cx, py = cy;
+        var d = 'M ' + px + ' ' + py;
+        for (var k = 1; k <= segs; k++) {
+          var frac = k / segs;
+          px = cx + Math.cos(ang) * len * frac + (Math.random() - 0.5) * 9;
+          py = cy + Math.sin(ang) * len * frac + (Math.random() - 0.5) * 9;
+          d += ' L ' + px.toFixed(2) + ' ' + py.toFixed(2);
+        }
+        var path = document.createElementNS(NS, 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', 'rgba(50, 30, 16, 0.7)');
+        path.setAttribute('stroke-width', (0.4 + Math.random() * 0.6).toFixed(2));
+        path.setAttribute('stroke-linecap', 'round');
+        svg.appendChild(path);
+      }
+
+      var ring = document.createElementNS(NS, 'circle');
+      ring.setAttribute('cx', cx);
+      ring.setAttribute('cy', cy);
+      ring.setAttribute('r', 24);
+      ring.setAttribute('fill', 'none');
+      ring.setAttribute('stroke', 'rgba(50, 30, 16, 0.35)');
+      ring.setAttribute('stroke-width', '0.4');
+      ring.setAttribute('stroke-dasharray', '2 1.5');
+      svg.appendChild(ring);
+
+      crackEl.innerHTML = '';
+      crackEl.appendChild(svg);
+    }
+
+    function showCelebration(message) {
+      var sub = celebrateEl.querySelector('.celebrate-sub');
+      if (message) sub.textContent = message;
+      celebrateEl.classList.add('show');
+      explode();
+      setTimeout(function () {
+        buildCracks();
+        crackEl.classList.add('show');
+        setTimeout(function () {
+          celebrateEl.classList.remove('show');
+        }, 1400);
+      }, 2800);
+    }
+
+    window.showCelebration = showCelebration;
   })();
 </script>
 
