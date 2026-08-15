@@ -69,35 +69,6 @@
     z-index: 1;
   }
 
-  /* Кнопка музыки */
-  .music-btn {
-    position: fixed;
-    top: 18px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 50;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, 0.9);
-    background: rgba(0, 0, 0, 0.35);
-    color: #fff;
-    font-size: 17px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.3s, transform 0.3s;
-    backdrop-filter: blur(2px);
-  }
-  .music-btn:hover { background: rgba(0, 0, 0, 0.6); }
-  .music-btn.playing { animation: pulse-music 1.6s ease-in-out infinite; }
-
-  @keyframes pulse-music {
-    0%, 100% { transform: translateX(-50%) scale(1); }
-    50%      { transform: translateX(-50%) scale(1.12); }
-  }
-
   .hero .kicker {
     font-size: 13px;
     letter-spacing: 6px;
@@ -240,6 +211,23 @@
   @media (max-width: 600px) {
     .info-grid { grid-template-columns: 1fr; }
     .container { padding: 34px 22px; }
+  }
+
+  @media (max-width: 480px) {
+    .section { padding: 54px 16px; }
+    .hero { min-height: 94vh; }
+    .hero h1 { font-size: clamp(36px, 11vw, 46px); }
+    .hero .sub { font-size: 15px; letter-spacing: 3px; }
+    .arrow-down { bottom: 24px; width: 44px; height: 44px; }
+    .section-head h2 { font-size: 30px; }
+    .info-card .ic-value { font-size: 20px; }
+    .invite-text .em { font-size: 20px; }
+    .game-score { gap: 26px; font-size: 15px; }
+    .game-score b { font-size: 22px; }
+    .timeline li { gap: 12px; }
+    .timeline .time { min-width: 56px; font-size: 14px; }
+    .timeline .desc { font-size: 15px; }
+    .final p { font-size: clamp(28px, 8vw, 38px); }
   }
 
   /* ===== Фото-экран ===== */
@@ -450,8 +438,6 @@
 
 <audio id="bg-music" src="song.mp3" loop preload="auto"></audio>
 
-<button class="music-btn" id="music-btn" aria-label="Включить музыку" title="Включить музыку">&#9654;</button>
-
 <!-- Обложка -->
 <section class="hero" id="top">
   <div class="tint"></div>
@@ -577,7 +563,7 @@
       <h2>Сыграйте в пинг-понг!</h2>
       <div class="line"></div>
     </div>
-    <p class="game-hint">Управляйте ракеткой мышью или клавишами &uarr; &darr; / W S. Первый до 5 очков.</p>
+    <p class="game-hint">Управляйте ракеткой пальцем, мышью или клавишами &uarr; &darr; / W S. Первый до 5 очков.</p>
     <div class="game-wrap">
       <canvas id="pong" width="800" height="450"></canvas>
       <div class="game-overlay" id="game-overlay">
@@ -618,12 +604,65 @@
 
   document.querySelectorAll('.reveal').forEach(function (el) { observer.observe(el); });
 
-  // Отправка анкеты
+  // Отправка анкеты: данные копятся в localStorage,
+  // каждый ответ скачивается в отдельный файл guests.json,
+  // а если ниже указан GUEST_EMAIL — ответ также уходит на почту через formsubmit.co
+  var GUEST_EMAIL = ''; // пример: 'mybirthday@gmail.com'
+
+  function saveGuest(data) {
+    var all = [];
+    try { all = JSON.parse(localStorage.getItem('guests') || '[]'); } catch (err) {}
+    all.push(data);
+    localStorage.setItem('guests', JSON.stringify(all));
+    return all;
+  }
+
+  function downloadGuests(all) {
+    var blob = new Blob([JSON.stringify(all, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'guests.json';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function sendGuestEmail(data) {
+    return fetch('https://formsubmit.co/ajax/' + GUEST_EMAIL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        name: data.name,
+        phone: data.phone,
+        attend: data.attend,
+        message: 'Гость: ' + data.name + ' (' + data.phone + ') — ' + data.attend + '. Заполнено: ' + data.date,
+        _subject: 'Новый гость на день рождения'
+      })
+    }).then(function (r) { return r.json(); });
+  }
+
   document.getElementById('guest-form').addEventListener('submit', function (e) {
     e.preventDefault();
     var attend = this.querySelector('input[name="attend"]:checked');
-    console.log('Гость: ' + this.name.value + ', тел: ' + this.phone.value + ', ответ: ' + (attend ? attend.value : ''));
-    this.style.display = 'none';
+    var data = {
+      name: this.name.value.trim(),
+      phone: this.phone.value.trim(),
+      attend: attend ? attend.value : '',
+      date: new Date().toLocaleString('ru-RU')
+    };
+
+    var all = saveGuest(data);
+    downloadGuests(all);
+
+    var form = this;
+    if (GUEST_EMAIL) {
+      sendGuestEmail(data)['catch'](function () {});
+    }
+
+    form.style.display = 'none';
     document.getElementById('thanks').style.display = 'block';
   });
 
@@ -694,6 +733,23 @@
         if (playerY > H - paddleH) playerY = H - paddleH;
       }
     });
+
+    // Управление: касание (мобильные)
+    function movePaddleToTouch(t) {
+      var rect = canvas.getBoundingClientRect();
+      var y = (t.clientY - rect.top) * (H / rect.height);
+      if (state === 'play') {
+        playerY = y - paddleH / 2;
+        if (playerY < 0) playerY = 0;
+        if (playerY > H - paddleH) playerY = H - paddleH;
+      }
+    }
+    canvas.addEventListener('touchstart', function (e) {
+      if (e.changedTouches.length) movePaddleToTouch(e.changedTouches[0]);
+    }, { passive: true });
+    canvas.addEventListener('touchmove', function (e) {
+      if (e.changedTouches.length) movePaddleToTouch(e.changedTouches[0]);
+    }, { passive: true });
 
     // Управление: клавиши
     var keys = {};
@@ -962,31 +1018,36 @@
     loop();
   })();
 
-  // ===== Музыка =====
+  // ===== Музыка: автозапуск при первом взаимодействии =====
+  // Браузеры блокируют звук без действия пользователя,
+  // поэтому музыка включается сама при первом клике/касании в любом месте страницы
   (function () {
     var audio = document.getElementById('bg-music');
-    var btn = document.getElementById('music-btn');
-    if (!audio || !btn) return;
+    if (!audio) return;
 
-    btn.addEventListener('click', function () {
+    function tryPlay() {
       if (audio.paused) {
-        audio.play().then(function () {
-          btn.innerHTML = '&#10074;&#10074;';
-          btn.classList.add('playing');
-          btn.title = 'Выключить музыку';
-        }).catch(function () {
-          alert('Не удалось включить музыку. Проверьте, что файл song.mp3 лежит в папке сайта.');
-        });
-      } else {
-        audio.pause();
-        btn.innerHTML = '&#9654;';
-        btn.classList.remove('playing');
-        btn.title = 'Включить музыку';
+        var p = audio.play();
+        if (p && p['catch']) p['catch'](function () {});
       }
-    });
+    }
+
+    // Попытка сразу при загрузке (сработает, если браузер разрешает)
+    tryPlay();
+
+    // И при первом взаимодействии пользователя с страницей
+    var started = false;
+    var events = ['pointerdown', 'touchstart', 'keydown', 'click'];
+    function onUser() {
+      if (started) return;
+      started = true;
+      tryPlay();
+      events.forEach(function (e) { document.removeEventListener(e, onUser, true); });
+    }
+    events.forEach(function (e) { document.addEventListener(e, onUser, true); });
 
     audio.addEventListener('error', function () {
-      btn.title = 'Музыка не найдена: добавьте song.mp3 в папку сайта';
+      console.warn('Музыка не найдена: положите файл song.mp3 в папку сайта.');
     });
   })();
 </script>
