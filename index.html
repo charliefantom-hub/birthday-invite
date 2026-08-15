@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Приглашение на день рождения</title>
+<meta property="og:image" content="cover.jpeg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fdf8e9;
+    --card: #ffffff;
+    --text: #3a2f16;
+    --muted: #9a8a5f;
+    --gold: #f0c419;
+    --gold-dark: #d9ab00;
+    --peach: #f2994a;
+    --line: #efe6c8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, .serif {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+
+  /* ===== Обложка ===== */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    background-image: url('cover.jpeg');
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 24px 90px;
+    color: #fff;
+  }
+
+  .hero .tint {
+    position: absolute;
+    inset: 0;
+    background: rgba(58, 47, 22, 0.35);
+  }
+
+  .hero .inner { position: relative; z-index: 1; }
+
+  .hero-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Кнопка музыки */
+  .music-btn {
+    position: fixed;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    background: rgba(0, 0, 0, 0.35);
+    color: #fff;
+    font-size: 17px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s, transform 0.3s;
+    backdrop-filter: blur(2px);
+  }
+  .music-btn:hover { background: rgba(0, 0, 0, 0.6); }
+  .music-btn.playing { animation: pulse-music 1.6s ease-in-out infinite; }
+
+  @keyframes pulse-music {
+    0%, 100% { transform: translateX(-50%) scale(1); }
+    50%      { transform: translateX(-50%) scale(1.12); }
+  }
+
+  .hero .kicker {
+    font-size: 13px;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: #ffe9a8;
+    margin-bottom: 16px;
+  }
+
+  .hero h1 {
+    font-size: clamp(46px, 9vw, 84px);
+    font-weight: 600;
+    line-height: 1.05;
+    margin-bottom: 8px;
+    text-shadow: 0 2px 18px rgba(0,0,0,0.35);
+  }
+
+  .hero .sub {
+    font-size: clamp(18px, 3vw, 24px);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #ffd76a;
+    margin-top: 18px;
+  }
+
+  .arrow-down {
+    position: absolute;
+    bottom: 34px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 50px;
+    border: 1.5px solid #fff;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: bounce 1.8s ease-in-out infinite;
+    transition: background 0.3s;
+    z-index: 2;
+  }
+  .arrow-down:hover { background: rgba(0,0,0,0.4); }
+  .arrow-down svg { fill: #fff; width: 22px; height: 22px; }
+
+  @keyframes bounce {
+    0%, 100% { transform: translate(-50%, 0); }
+    50%      { transform: translate(-50%, 10px); }
+  }
+
+  /* ===== Секции и контейнеры ===== */
+  .section {
+    padding: 70px 24px;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 46px 42px;
+    box-shadow: 0 14px 40px rgba(58, 47, 22, 0.08);
+  }
+
+  .section-head {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  .section-head .label {
+    font-size: 12px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: var(--peach);
+    margin-bottom: 10px;
+  }
+
+  .section-head h2 {
+    font-size: 38px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .section-head .line {
+    width: 48px;
+    height: 2px;
+    background: var(--gold);
+    margin: 14px auto 0;
+  }
+
+  /* Появление при скролле */
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  .invite-text {
+    text-align: center;
+    font-size: 17px;
+  }
+  .invite-text p { margin-bottom: 16px; }
+  .invite-text .em {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 24px;
+    font-style: italic;
+    color: #b8860b;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+
+  .info-card {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 24px 20px;
+    text-align: center;
+  }
+  .info-card .ic-label {
+    font-size: 12px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--peach);
+    margin-bottom: 10px;
+  }
+  .info-card .ic-value {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+  }
+
+  @media (max-width: 600px) {
+    .info-grid { grid-template-columns: 1fr; }
+    .container { padding: 34px 22px; }
+  }
+
+  /* ===== Фото-экран ===== */
+  .photo-screen {
+    position: relative;
+    min-height: 90vh;
+    background-image: url('photo2.jpg');
+    background-size: cover;
+    background-position: center;
+  }
+
+  /* ===== Форма ===== */
+  form .field { margin-bottom: 20px; }
+
+  form label.f-label {
+    display: block;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  form input[type="text"],
+  form input[type="tel"] {
+    width: 100%;
+    padding: 14px 16px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  form input:focus { border-color: var(--gold-dark); }
+
+  .radio-group { display: flex; flex-direction: column; gap: 10px; }
+  .radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  .radio-group input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--gold-dark);
+    cursor: pointer;
+  }
+
+  .btn {
+    display: inline-block;
+    width: 100%;
+    padding: 16px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--gold-dark);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn:hover { background: #bf9a00; }
+
+  .thanks {
+    display: none;
+    text-align: center;
+    padding: 30px 10px;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 26px;
+    color: #b8860b;
+  }
+
+  /* ===== Программа ===== */
+  .timeline { list-style: none; }
+  .timeline li {
+    display: flex;
+    gap: 22px;
+    padding: 16px 0;
+    border-bottom: 1px dashed var(--line);
+  }
+  .timeline li:last-child { border-bottom: none; }
+  .timeline .time {
+    min-width: 74px;
+    font-weight: 700;
+    color: var(--peach);
+    font-size: 17px;
+  }
+  .timeline .desc { color: var(--text); font-size: 16px; }
+
+  /* ===== Финальный блок ===== */
+  .final {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 50vh;
+    background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+    padding: 60px 24px;
+  }
+  .final p {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(34px, 6vw, 54px);
+    font-weight: 700;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  /* ===== Игра пинг-понг ===== */
+  .game-hint {
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 18px;
+  }
+
+  .game-wrap {
+    position: relative;
+    max-width: 760px;
+    margin: 0 auto;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 14px 40px rgba(58, 47, 22, 0.12);
+    background: #2b3b2f;
+    user-select: none;
+  }
+
+  #pong {
+    display: block;
+    width: 100%;
+    height: auto;
+    cursor: none;
+    touch-action: none;
+  }
+
+  .game-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: rgba(43, 59, 47, 0.72);
+    z-index: 2;
+  }
+
+  .game-overlay.hidden { display: none; }
+
+  .overlay-title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 40px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .overlay-note {
+    color: #ffd76a;
+    font-size: 15px;
+  }
+
+  .btn-game {
+    width: auto;
+    padding: 14px 44px;
+    background: var(--gold-dark);
+  }
+  .btn-game:hover { background: #bf9a00; }
+
+  .game-score {
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+    margin: 18px 0 0;
+    font-size: 18px;
+    color: var(--muted);
+  }
+  .game-score b { font-size: 26px; color: var(--text); font-weight: 700; }
+
+  .btn-restart {
+    display: block;
+    width: auto;
+    margin: 18px auto 0;
+    padding: 14px 40px;
+    background: transparent;
+    color: var(--gold-dark);
+    border: 1.5px solid var(--gold-dark);
+  }
+  .btn-restart:hover { background: var(--gold-dark); color: #fff; }
+
+  footer {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 14px;
+    border-top: 1px solid var(--line);
+  }
+</style>
+</head>
+<body>
+
+<audio id="bg-music" src="song.mp3" loop preload="auto"></audio>
+
+<button class="music-btn" id="music-btn" aria-label="Включить музыку" title="Включить музыку">&#9654;</button>
+
+<!-- Обложка -->
+<section class="hero" id="top">
+  <div class="tint"></div>
+  <canvas id="fireworks" class="hero-canvas"></canvas>
+  <div class="inner">
+    <div class="kicker">Приглашение на день рождения</div>
+    <h1>Нашему малышу<br>исполняется 3 года!</h1>
+    <div class="sub">30 августа · 17:00</div>
+  </div>
+  <button class="arrow-down" onclick="scrollDown(this)" aria-label="Прокрутить вниз">
+    <svg viewBox="0 0 38.417 18.592"><path d="M19.208,18.592c-0.241,0-0.483-0.087-0.673-0.261L0.327,1.74c-0.408-0.372-0.438-1.004-0.066-1.413c0.372-0.409,1.004-0.439,1.413-0.066L19.208,16.24L36.743,0.261c0.411-0.372,1.042-0.342,1.413,0.066c0.372,0.408,0.343,1.041-0.065,1.413L19.881,18.332C19.691,18.505,19.449,18.592,19.208,18.592z"/></svg>
+  </button>
+</section>
+
+<!-- Приглашение -->
+<section class="section" id="invite">
+  <div class="container reveal">
+    <div class="section-head">
+      <div class="label">Приглашение</div>
+      <h2>Дорогие гости!</h2>
+      <div class="line"></div>
+    </div>
+    <div class="invite-text">
+      <p>У нас праздник! Совсем скоро наш малыш отметит свой третий день рождения.</p>
+      <p>Мы будем очень счастливы, если вы присоединитесь к нам <span class="em">в этот весёлый день</span> — радоваться, играть и есть торт!</p>
+    </div>
+  </div>
+</section>
+
+<!-- Детали -->
+<section class="section" id="details">
+  <div class="container reveal">
+    <div class="section-head">
+      <div class="label">Важная информация</div>
+      <h2>Детали праздника</h2>
+      <div class="line"></div>
+    </div>
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="ic-label">Когда</div>
+        <div class="ic-value">30 августа, 17:00</div>
+      </div>
+      <div class="info-card">
+        <div class="ic-label">Где</div>
+        <div class="ic-value">База отдыха «Аквамарин»<br>п. Волчанец, ул. Горная 5</div>
+      </div>
+      <div class="info-card">
+        <div class="ic-label">Дресс-код</div>
+        <div class="ic-value">Плавки / Купальники<br>у нас будет бассейн!</div>
+      </div>
+      <div class="info-card">
+        <div class="ic-label">Подарок</div>
+        <div class="ic-value">Доверимся вашей фантазии<br>и щедрости</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Фото -->
+<section class="photo-screen">
+  <button class="arrow-down" onclick="scrollDown(this)" aria-label="Прокрутить вниз">
+    <svg viewBox="0 0 38.417 18.592"><path d="M19.208,18.592c-0.241,0-0.483-0.087-0.673-0.261L0.327,1.74c-0.408-0.372-0.438-1.004-0.066-1.413c0.372-0.409,1.004-0.439,1.413-0.066L19.208,16.24L36.743,0.261c0.411-0.372,1.042-0.342,1.413,0.066c0.372,0.408,0.343,1.041-0.065,1.413L19.881,18.332C19.691,18.505,19.449,18.592,19.208,18.592z"/></svg>
+  </button>
+</section>
+
+<!-- Анкета гостя -->
+<section class="section" id="rsvp">
+  <div class="container reveal">
+    <div class="section-head">
+      <div class="label">Анкета гостя</div>
+      <h2>Подтвердите своё присутствие</h2>
+      <div class="line"></div>
+    </div>
+    <form id="guest-form">
+      <div class="field">
+        <label class="f-label" for="name">Имя и фамилия</label>
+        <input type="text" id="name" placeholder="Иван Иванов" required>
+      </div>
+      <div class="field">
+        <label class="f-label" for="phone">Контактный номер телефона</label>
+        <input type="tel" id="phone" placeholder="+7 (___) ___-__-__" required>
+      </div>
+      <div class="field">
+        <span class="f-label">Будете на празднике?</span>
+        <div class="radio-group">
+          <label><input type="radio" name="attend" value="приду" required> Обязательно приду!</label>
+          <label><input type="radio" name="attend" value="не приду"> К сожалению, не смогу</label>
+        </div>
+      </div>
+      <button type="submit" class="btn">Отправить</button>
+      <div class="thanks" id="thanks">Спасибо! Ждём вас на празднике!</div>
+    </form>
+  </div>
+</section>
+
+<!-- Программа дня -->
+<section class="section" id="program">
+  <div class="container reveal">
+    <div class="section-head">
+      <div class="label">Программа дня</div>
+      <h2>Как пройдёт праздник</h2>
+      <div class="line"></div>
+    </div>
+    <ul class="timeline">
+      <li><span class="time">17:00</span><span class="desc">Сбор гостей, приветственный фуршет</span></li>
+      <li><span class="time">17:30</span><span class="desc">Игры и купание в бассейне</span></li>
+      <li><span class="time">19:00</span><span class="desc">Торт, свечки и подарки</span></li>
+      <li><span class="time">20:00</span><span class="desc">Танцы и весёлые конкурсы</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- Финальный блок -->
+<section class="final">
+  <p>Ждём вас на мою тусу!</p>
+</section>
+
+<!-- Мини-игра -->
+<section class="section" id="game">
+  <div class="container reveal">
+    <div class="section-head">
+      <div class="label">Мини-игра</div>
+      <h2>Сыграйте в пинг-понг!</h2>
+      <div class="line"></div>
+    </div>
+    <p class="game-hint">Управляйте ракеткой мышью или клавишами &uarr; &darr; / W S. Первый до 5 очков.</p>
+    <div class="game-wrap">
+      <canvas id="pong" width="800" height="450"></canvas>
+      <div class="game-overlay" id="game-overlay">
+        <div class="overlay-title" id="overlay-title">Пинг-понг</div>
+        <p class="overlay-note" id="overlay-note">Ждём вас на празднике — а пока поиграйте!</p>
+        <button class="btn btn-game" id="btn-start">Играть</button>
+      </div>
+    </div>
+    <div class="game-score">
+      <span>Вы: <b id="score-you">0</b></span>
+      <span>Соперник: <b id="score-cpu">0</b></span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>С радостью, семья именинника</p>
+</footer>
+
+<script>
+  // Плавная прокрутка к следующему блоку
+  function scrollDown(btn) {
+    var all = document.querySelectorAll('.section, .photo-screen, .final, footer');
+    for (var i = 0; i < all.length; i++) {
+      if (all[i].getBoundingClientRect().top > 4) {
+        all[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+    }
+  }
+
+  // Появление блоков при прокрутке
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) entry.target.classList.add('visible');
+    });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('.reveal').forEach(function (el) { observer.observe(el); });
+
+  // Отправка анкеты
+  document.getElementById('guest-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var attend = this.querySelector('input[name="attend"]:checked');
+    console.log('Гость: ' + this.name.value + ', тел: ' + this.phone.value + ', ответ: ' + (attend ? attend.value : ''));
+    this.style.display = 'none';
+    document.getElementById('thanks').style.display = 'block';
+  });
+
+  // ===== Пинг-понг =====
+  (function () {
+    var canvas = document.getElementById('pong');
+    var ctx = canvas.getContext('2d');
+    var W = canvas.width, H = canvas.height;
+
+    var overlay = document.getElementById('game-overlay');
+    var overlayTitle = document.getElementById('overlay-title');
+    var btnStart = document.getElementById('btn-start');
+    var scoreYou = document.getElementById('score-you');
+    var scoreCpu = document.getElementById('score-cpu');
+
+    var WIN = 5;
+    var paddleW = 12, paddleH = 92;
+    var ballR = 8;
+
+    var state = 'menu'; // menu | play | over
+    var playerY, cpuY, ball, velX, velY, speed;
+    var scoreP, scoreC;
+
+    function resetBall() {
+      ball = { x: W / 2, y: H / 2 };
+      var angle = (Math.random() * 0.8 + 0.3) * Math.PI;
+      var dir = Math.random() < 0.5 ? 1 : -1;
+      velX = Math.cos(angle) * speed * dir;
+      velY = Math.sin(angle) * speed * (Math.random() < 0.5 ? 1 : -1);
+    }
+
+    function newGame() {
+      scoreP = 0; scoreC = 0;
+      playerY = H / 2 - paddleH / 2;
+      cpuY = H / 2 - paddleH / 2;
+      speed = 5;
+      resetBall();
+      updateScore();
+    }
+
+    function updateScore() {
+      scoreYou.textContent = scoreP;
+      scoreCpu.textContent = scoreC;
+    }
+
+    function serve() {
+      speed = 5;
+      resetBall();
+    }
+
+    function gameOver(winner) {
+      state = 'over';
+      overlayTitle.textContent = winner === 'you' ? 'Вы победили!' : 'Победил соперник';
+      document.getElementById('overlay-note').textContent = 'Сыграем ещё разок?';
+      btnStart.textContent = 'Сыграть ещё раз';
+      overlay.classList.remove('hidden');
+    }
+
+    // Управление: мышь
+    var mouseY = null;
+    canvas.addEventListener('mousemove', function (e) {
+      var rect = canvas.getBoundingClientRect();
+      var y = (e.clientY - rect.top) * (H / rect.height);
+      mouseY = y;
+      if (state === 'play') {
+        playerY = y - paddleH / 2;
+        if (playerY < 0) playerY = 0;
+        if (playerY > H - paddleH) playerY = H - paddleH;
+      }
+    });
+
+    // Управление: клавиши
+    var keys = {};
+    document.addEventListener('keydown', function (e) {
+      keys[e.key.toLowerCase()] = true;
+    });
+    document.addEventListener('keyup', function (e) {
+      keys[e.key.toLowerCase()] = false;
+    });
+
+    function update() {
+      if (state !== 'play') return;
+
+      // Игрок с клавиатуры
+      if (keys['w'] || keys['arrowup']) playerY -= 8;
+      if (keys['s'] || keys['arrowdown']) playerY += 8;
+      playerY = Math.max(0, Math.min(H - paddleH, playerY));
+
+      // ИИ
+      var cpuTarget = ball.y - paddleH / 2;
+      var cpuSpeed = Math.min(4.6, speed * 0.85);
+      if (cpuY + paddleH / 2 < ball.y - 6) cpuY += cpuSpeed;
+      else if (cpuY + paddleH / 2 > ball.y + 6) cpuY -= cpuSpeed;
+      cpuY = Math.max(0, Math.min(H - paddleH, cpuY));
+
+      // Мяч
+      ball.x += velX;
+      ball.y += velY;
+
+      // Стены
+      if (ball.y - ballR < 0) { ball.y = ballR; velY = -velY; }
+      if (ball.y + ballR > H) { ball.y = H - ballR; velY = -velY; }
+
+      // Ракетки
+      if (velX < 0 && ball.x - ballR < 20 + paddleW &&
+          ball.x - ballR > 20 && ball.y > playerY && ball.y < playerY + paddleH) {
+        ball.x = 20 + paddleW + ballR;
+        velX = Math.abs(velX);
+        var diff = (ball.y - (playerY + paddleH / 2)) / (paddleH / 2);
+        velY = diff * 6;
+        if (speed < 9.5) speed += 0.35;
+        var norm = Math.hypot(velX, velY);
+        velX = (velX / norm) * speed;
+        velY = (velY / norm) * speed;
+      }
+
+      if (velX > 0 && ball.x + ballR > W - 20 - paddleW &&
+          ball.x + ballR < W - 20 && ball.y > cpuY && ball.y < cpuY + paddleH) {
+        ball.x = W - 20 - paddleW - ballR;
+        velX = -Math.abs(velX);
+        var cd = (ball.y - (cpuY + paddleH / 2)) / (paddleH / 2);
+        velY = cd * 6;
+        var cn = Math.hypot(velX, velY);
+        velX = (velX / cn) * speed;
+        velY = (velY / cn) * speed;
+      }
+
+      // Голы
+      if (ball.x < -20) {
+        scoreC++;
+        updateScore();
+        if (scoreC >= WIN) return gameOver('cpu');
+        serve();
+      }
+      if (ball.x > W + 20) {
+        scoreP++;
+        updateScore();
+        if (scoreP >= WIN) return gameOver('you');
+        serve();
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+
+      // Фон
+      var g = ctx.createLinearGradient(0, 0, W, 0);
+      g.addColorStop(0, '#2b3b2f');
+      g.addColorStop(1, '#1f2c22');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+
+      // Центральная линия
+      ctx.setLineDash([10, 14]);
+      ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(W / 2, 0);
+      ctx.lineTo(W / 2, H);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Ракетки
+      ctx.fillStyle = '#f0c419';
+      ctx.fillRect(20, playerY, paddleW, paddleH);
+      ctx.fillStyle = '#f2994a';
+      ctx.fillRect(W - 20 - paddleW, cpuY, paddleW, paddleH);
+
+      // Мяч
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ballR, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      ctx.shadowBlur = 14;
+      ctx.shadowColor = '#f0c419';
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ballR, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(240,196,25,0.9)';
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    btnStart.addEventListener('click', function () {
+      if (state === 'over') newGame();
+      else if (state === 'menu') { scoreP = 0; scoreC = 0; playerY = H / 2 - paddleH / 2; cpuY = H / 2 - paddleH / 2; speed = 5; resetBall(); updateScore(); }
+      state = 'play';
+      overlay.classList.add('hidden');
+    });
+
+    // Клик по полю тоже запускает игру
+    canvas.addEventListener('click', function () {
+      if (state !== 'play') btnStart.click();
+    });
+
+    newGame();
+    loop();
+  })();
+
+  // ===== Фейерверки на обложке =====
+  (function () {
+    var canvas = document.getElementById('fireworks');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var hero = document.getElementById('top');
+
+    var W, H;
+    function resize() {
+      W = canvas.width = hero.offsetWidth;
+      H = canvas.height = hero.offsetHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    var colors = ['#f0c419', '#f2994a', '#ffd166', '#ff6b6b', '#fff3c9', '#f6e27a'];
+    var rockets = [];
+    var particles = [];
+
+    function explode(x, y) {
+      var count = 32 + Math.floor(Math.random() * 16);
+      for (var i = 0; i < count; i++) {
+        var a = Math.random() * Math.PI * 2;
+        var sp = 1.5 + Math.random() * 4.5;
+        particles.push({
+          x: x, y: y,
+          vx: Math.cos(a) * sp,
+          vy: Math.sin(a) * sp,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          life: 1,
+          decay: 0.012 + Math.random() * 0.015,
+          r: 1.5 + Math.random() * 2
+        });
+      }
+    }
+
+    function launch() {
+      var x = W * 0.15 + Math.random() * W * 0.7;
+      var targetY = H * (0.1 + Math.random() * 0.35);
+      rockets.push({
+        x: x, y: H + 6,
+        vy: -(H - targetY) / 75,
+        vx: (Math.random() - 0.5) * 0.6,
+        targetY: targetY,
+        trail: []
+      });
+    }
+
+    function heroVisible() {
+      var r = hero.getBoundingClientRect();
+      return r.bottom > 0 && r.top < window.innerHeight;
+    }
+
+    var lastLaunch = 0;
+
+    function step() {
+      if (!heroVisible()) return;
+
+      // Запуск ракет-выстрелов
+      var now = Date.now();
+      if (now - lastLaunch > 800 + Math.random() * 900) {
+        launch();
+        if (Math.random() < 0.45) launch();
+        lastLaunch = now;
+      }
+
+      // Ракеты
+      for (var i = rockets.length - 1; i >= 0; i--) {
+        var r = rockets[i];
+        r.x += r.vx;
+        r.y += r.vy;
+        r.trail.push({ x: r.x, y: r.y });
+        if (r.trail.length > 14) r.trail.shift();
+        if (r.y <= r.targetY) {
+          explode(r.x, r.y);
+          rockets.splice(i, 1);
+        }
+      }
+
+      // Частицы
+      for (var j = particles.length - 1; j >= 0; j--) {
+        var p = particles[j];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.06;
+        p.vx *= 0.985;
+        p.life -= p.decay;
+        if (p.life <= 0) particles.splice(j, 1);
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+
+      // Хвосты ракет
+      for (var i = 0; i < rockets.length; i++) {
+        var r = rockets[i];
+        ctx.globalAlpha = 0.9;
+        for (var t = 0; t < r.trail.length; t++) {
+          ctx.globalAlpha = (t / r.trail.length) * 0.8;
+          ctx.fillStyle = '#ffe9a8';
+          ctx.fillRect(r.trail[t].x - 1.5, r.trail[t].y - 1.5, 3, 3);
+        }
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(r.x, r.y, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Частицы взрывов
+      for (var j = 0; j < particles.length; j++) {
+        var p = particles[j];
+        ctx.globalAlpha = Math.max(0, p.life);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // Первый «залп» сразу при загрузке
+    launch();
+    launch();
+
+    function loop() {
+      step();
+      draw();
+      requestAnimationFrame(loop);
+    }
+    loop();
+  })();
+
+  // ===== Музыка =====
+  (function () {
+    var audio = document.getElementById('bg-music');
+    var btn = document.getElementById('music-btn');
+    if (!audio || !btn) return;
+
+    btn.addEventListener('click', function () {
+      if (audio.paused) {
+        audio.play().then(function () {
+          btn.innerHTML = '&#10074;&#10074;';
+          btn.classList.add('playing');
+          btn.title = 'Выключить музыку';
+        }).catch(function () {
+          alert('Не удалось включить музыку. Проверьте, что файл song.mp3 лежит в папке сайта.');
+        });
+      } else {
+        audio.pause();
+        btn.innerHTML = '&#9654;';
+        btn.classList.remove('playing');
+        btn.title = 'Включить музыку';
+      }
+    });
+
+    audio.addEventListener('error', function () {
+      btn.title = 'Музыка не найдена: добавьте song.mp3 в папку сайта';
+    });
+  })();
+</script>
+
+</body>
+</html>
