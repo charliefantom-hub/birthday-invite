@@ -719,11 +719,12 @@
   }
 
   function prefillForm(data) {
-    var form = document.getElementById('guest-form');
-    if (!form) return;
-    if (data.name) form.name.value = data.name;
-    if (data.phone) form.phone.value = data.phone;
-    var radios = form.querySelectorAll('input[name="attend"]');
+    var nameEl = document.getElementById('name');
+    var phoneEl = document.getElementById('phone');
+    if (!nameEl || !phoneEl) return;
+    if (data.name) nameEl.value = data.name;
+    if (data.phone) phoneEl.value = data.phone;
+    var radios = document.querySelectorAll('input[name="attend"]');
     for (var i = 0; i < radios.length; i++) {
       radios[i].checked = radios[i].value === data.attend;
     }
@@ -769,11 +770,13 @@
 
   guestForm.addEventListener('submit', function (e) {
     e.preventDefault();
-    var attend = this.querySelector('input[name="attend"]:checked');
+    var nameEl = document.getElementById('name');
+    var phoneEl = document.getElementById('phone');
+    var attend = document.querySelector('input[name="attend"]:checked');
     var editing = !!getCookie('guest_data');
     var data = {
-      name: this.name.value.trim(),
-      phone: this.phone.value.trim(),
+      name: nameEl ? nameEl.value.trim() : '',
+      phone: phoneEl ? phoneEl.value.trim() : '',
       attend: attend ? attend.value : '',
       date: new Date().toLocaleString('ru-RU')
     };
